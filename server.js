@@ -1,8 +1,13 @@
 const express = require('express');
 const bodyParser = require('body-parser')
+const bcrypt = require('bcrypt');
+const saltRounds = 10;
+const cors = require('cors')
+
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors())
 
 const database = {  
     users: [
@@ -32,7 +37,7 @@ app.get('/', (req, res)=>{
 app.post('/signin', (req,res) =>{
     if(req.body.email === database.users[0].email &&
         req.body.password === database.users[0].password){
-            res.json('success')
+            res.json(database.users[0])
         } else {
             res.status(400).json('error logging in')
         }
@@ -40,14 +45,16 @@ app.post('/signin', (req,res) =>{
 
 app.post('/register', (req,res) => {
     const {email, name, password} = req.body
-    database.users.push({
-        id: "125",
-        name: name,
-        email: email,
-        password: password,
-        entries: 0,
-        joined: new Date()
-    })
+    bcrypt.hash(password, saltRounds, function(err, hash) {
+        // console.log(hash)
+        database.users.push({
+            id: "125",
+            name: name,
+            email: email,
+            entries: 0,
+            joined: new Date()
+        })
+    });
     res.json(database.users[database.users.length - 1])
 
 })
@@ -67,9 +74,9 @@ app.get("/profile/:id", (req,res) =>{
     }
 })
 
-app.post("/image", (res, req) =>{
-    console.log(req.body)
-    // const { id } = req.body
+app.put("/image", (req, res) =>{
+    // console.log(req.body)
+    const { id } = req.body
     let found = false
 
     database.users.map(user => {
